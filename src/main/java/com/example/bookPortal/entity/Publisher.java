@@ -1,4 +1,4 @@
-package com.bookpartner.entity;
+package com.example.bookPortal.entity;
 
 import jakarta.persistence.*;
 
