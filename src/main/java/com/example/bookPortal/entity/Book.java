@@ -1,4 +1,4 @@
-package com.bookpartner.entity;
+package com.example.bookPortal.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -39,10 +39,6 @@ public class Book {
     @ManyToOne
     @JoinColumn(name = "publisher_id")
     private Publisher publisher;
-
-    @ManyToOne
-    @JoinColumn(name = "category_id")
-    private Category category;
 
     public Integer getBookId() {
         return bookId;
@@ -124,11 +120,4 @@ public class Book {
         this.publisher = publisher;
     }
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
 }

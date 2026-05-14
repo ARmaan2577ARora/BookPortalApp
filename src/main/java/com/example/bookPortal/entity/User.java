@@ -35,7 +35,7 @@ public class User {
 
     @ManyToOne
     @JoinColumn(name = "role_id")
-    private Role role;
+    private Roles role;
 
     public Integer getUserId() {
         return userId;
@@ -101,11 +101,11 @@ public class User {
         this.isActive = isActive;
     }
 
-    public Role getRole() {
+    public Roles getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(Roles role) {
         this.role = role;
     }
 }

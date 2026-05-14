@@ -1,7 +1,5 @@
 package com.example.bookPortal.entity;
 
-
-
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 

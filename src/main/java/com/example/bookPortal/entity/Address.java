@@ -2,8 +2,6 @@ package com.example.bookPortal.entity;
 
 import jakarta.persistence.*;
 
-import jakarta.persistence.*;
-
 @Entity
 @Table(name = "addresses")
 public class Address {
