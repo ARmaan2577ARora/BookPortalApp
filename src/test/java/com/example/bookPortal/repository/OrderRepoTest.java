@@ -4,6 +4,7 @@ import com.example.bookPortal.entity.Address;
 import com.example.bookPortal.entity.Order;
 import com.example.bookPortal.entity.Roles;
 import com.example.bookPortal.entity.User;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -32,65 +33,124 @@ class OrderRepoTest {
     @Autowired
     private RolesRepo rolesRepo;
 
+    private Roles customer;
+    private User user;
+    private Address address;
+    private Order oldOrder;
+    private Order latestOrder;
+
+    private String suffix;
+
     private Roles getOrCreateRole(String roleName) {
         return rolesRepo.findByRoleNameIgnoreCase(roleName)
                 .orElseGet(() -> rolesRepo.save(RepoTestHelper.role(roleName)));
     }
 
-    @Test
-    void testOrderRepoMethods() {
-        String suffix = RepoTestHelper.suffix();
+    @BeforeEach
+    void setUp() {
+        suffix = RepoTestHelper.suffix();
 
-        Roles customer = getOrCreateRole("CUSTOMER");
-        User user = userRepo.save(RepoTestHelper.user(suffix, customer, true));
-        Address address = addressRepo.save(RepoTestHelper.address(user, suffix, true));
+        customer = getOrCreateRole("CUSTOMER");
 
-        Order oldOrder = RepoTestHelper.order(user, address, suffix);
+        user = userRepo.save(
+                RepoTestHelper.user(suffix, customer, true)
+        );
+
+        address = addressRepo.save(
+                RepoTestHelper.address(user, suffix, true)
+        );
+
+        oldOrder = RepoTestHelper.order(user, address, suffix);
         oldOrder.setOrderDate(LocalDateTime.now().minusDays(1));
         oldOrder = orderRepo.save(oldOrder);
 
-        Order latestOrder = RepoTestHelper.order(user, address, suffix);
+        latestOrder = RepoTestHelper.order(user, address, suffix);
         latestOrder.setOrderDate(LocalDateTime.now());
         latestOrder = orderRepo.save(latestOrder);
+    }
 
+    @Test
+    void shouldFindOrdersByUserId() {
         assertThat(orderRepo.findByUser_UserId(user.getUserId()))
                 .extracting(Order::getOrderId)
                 .contains(oldOrder.getOrderId(), latestOrder.getOrderId());
+    }
 
+    @Test
+    void shouldFindOrdersByAddressId() {
         assertThat(orderRepo.findByAddress_AddressId(address.getAddressId()))
                 .extracting(Order::getOrderId)
                 .contains(oldOrder.getOrderId(), latestOrder.getOrderId());
+    }
 
-        assertThat(orderRepo.findByOrderStatusIgnoreCase(latestOrder.getOrderStatus().toLowerCase()))
+    @Test
+    void shouldFindOrdersByOrderStatusIgnoreCase() {
+        assertThat(orderRepo.findByOrderStatusIgnoreCase(
+                latestOrder.getOrderStatus().toLowerCase()
+        ))
                 .extracting(Order::getOrderId)
                 .contains(latestOrder.getOrderId());
+    }
 
-        assertThat(orderRepo.findByPaymentMethodIgnoreCase(latestOrder.getPaymentMethod().toLowerCase()))
+    @Test
+    void shouldFindOrdersByPaymentMethodIgnoreCase() {
+        assertThat(orderRepo.findByPaymentMethodIgnoreCase(
+                latestOrder.getPaymentMethod().toLowerCase()
+        ))
                 .extracting(Order::getOrderId)
                 .contains(latestOrder.getOrderId());
+    }
 
-        assertThat(orderRepo.findByOrderDateBetween(LocalDateTime.now().minusDays(2), LocalDateTime.now().plusDays(1)))
+    @Test
+    void shouldFindOrdersByOrderDateBetween() {
+        assertThat(orderRepo.findByOrderDateBetween(
+                LocalDateTime.now().minusDays(2),
+                LocalDateTime.now().plusDays(1)
+        ))
                 .extracting(Order::getOrderId)
                 .contains(oldOrder.getOrderId(), latestOrder.getOrderId());
+    }
 
-        assertThat(orderRepo.findByTotalAmountBetween(new BigDecimal("900.00"), new BigDecimal("1100.00")))
+    @Test
+    void shouldFindOrdersByTotalAmountBetween() {
+        assertThat(orderRepo.findByTotalAmountBetween(
+                new BigDecimal("900.00"),
+                new BigDecimal("1100.00")
+        ))
                 .extracting(Order::getOrderId)
                 .contains(oldOrder.getOrderId(), latestOrder.getOrderId());
+    }
 
-        assertThat(orderRepo.findByUser_EmailIgnoreCase(user.getEmail().toUpperCase()))
+    @Test
+    void shouldFindOrdersByUserEmailIgnoreCase() {
+        assertThat(orderRepo.findByUser_EmailIgnoreCase(
+                user.getEmail().toUpperCase()
+        ))
                 .extracting(Order::getOrderId)
                 .contains(oldOrder.getOrderId(), latestOrder.getOrderId());
+    }
 
+    @Test
+    void shouldFindOrdersByUserFullNameContainingIgnoreCase() {
         assertThat(orderRepo.findByUser_FullNameContainingIgnoreCase(suffix))
                 .extracting(Order::getOrderId)
                 .contains(oldOrder.getOrderId(), latestOrder.getOrderId());
+    }
 
+    @Test
+    void shouldReturnLatestOrderForUser() {
         assertThat(orderRepo.findTop10ByUser_UserIdOrderByOrderDateDesc(user.getUserId()))
                 .first()
                 .extracting(Order::getOrderId)
                 .isEqualTo(latestOrder.getOrderId());
+    }
 
-        assertThat(orderRepo.findByUser_UserIdAndOrderStatusIgnoreCase(user.getUserId(), latestOrder.getOrderStatus().toLowerCase()))
+    @Test
+    void shouldFindOrdersByUserIdAndStatusIgnoreCase() {
+        assertThat(orderRepo.findByUser_UserIdAndOrderStatusIgnoreCase(
+                user.getUserId(),
+                latestOrder.getOrderStatus().toLowerCase()
+        ))
                 .extracting(Order::getOrderId)
                 .contains(latestOrder.getOrderId());
     }

@@ -2,6 +2,7 @@ package com.example.bookPortal.repository;
 
 import com.example.bookPortal.entity.Book;
 import com.example.bookPortal.entity.Publisher;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -25,47 +26,124 @@ class BookRepoTest {
     @Autowired
     private PublisherRepo publisherRepo;
 
-    @Test
-    void testBookRepoMethods() {
+    private Publisher publisher;
+    private Book book;
+
+    @BeforeEach
+    void setUp() {
         String suffix = RepoTestHelper.suffix();
 
-        Publisher publisher = publisherRepo.save(RepoTestHelper.publisher(suffix));
-        Book book = bookRepo.save(RepoTestHelper.book(suffix, publisher));
+        publisher = publisherRepo.save(
+                RepoTestHelper.publisher(suffix)
+        );
 
-        assertThat(bookRepo.findByTitleContainingIgnoreCase(suffix))
+        book = bookRepo.save(
+                RepoTestHelper.book(suffix, publisher)
+        );
+    }
+
+    @Test
+    void shouldFindBookByTitleContainingIgnoreCase() {
+
+        assertThat(bookRepo.findByTitleContainingIgnoreCase(book.getTitle()))
                 .extracting(Book::getBookId)
                 .contains(book.getBookId());
+    }
+
+    @Test
+    void shouldFindBookByIsbn() {
 
         Optional<Book> byIsbn = bookRepo.findByIsbn(book.getIsbn());
+
         assertThat(byIsbn).isPresent();
+        assertThat(byIsbn.get().getBookId()).isEqualTo(book.getBookId());
+    }
 
-        assertThat(bookRepo.existsByIsbn(book.getIsbn())).isTrue();
+    @Test
+    void shouldCheckIfBookExistsByIsbn() {
 
-        assertThat(bookRepo.findByLanguageIgnoreCase(book.getLanguage().toLowerCase()))
+        assertThat(bookRepo.existsByIsbn(book.getIsbn()))
+                .isTrue();
+    }
+
+    @Test
+    void shouldFindBooksByLanguageIgnoreCase() {
+
+        assertThat(
+                bookRepo.findByLanguageIgnoreCase(
+                        book.getLanguage().toLowerCase()
+                )
+        )
                 .extracting(Book::getBookId)
                 .contains(book.getBookId());
+    }
+
+    @Test
+    void shouldFindBooksByPagesBetween() {
 
         assertThat(bookRepo.findByPagesBetween(100, 300))
                 .extracting(Book::getBookId)
                 .contains(book.getBookId());
+    }
 
-        assertThat(bookRepo.findByPublishedDateBetween(LocalDate.now().minusDays(1), LocalDate.now().plusDays(1)))
+    @Test
+    void shouldFindBooksByPublishedDateBetween() {
+
+        assertThat(
+                bookRepo.findByPublishedDateBetween(
+                        LocalDate.now().minusDays(1),
+                        LocalDate.now().plusDays(1)
+                )
+        )
                 .extracting(Book::getBookId)
                 .contains(book.getBookId());
+    }
 
-        assertThat(bookRepo.findByCreatedAtBetween(LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(1)))
+    @Test
+    void shouldFindBooksByCreatedAtBetween() {
+
+        assertThat(
+                bookRepo.findByCreatedAtBetween(
+                        LocalDateTime.now().minusDays(1),
+                        LocalDateTime.now().plusDays(1)
+                )
+        )
                 .extracting(Book::getBookId)
                 .contains(book.getBookId());
+    }
 
-        assertThat(bookRepo.findByPublisher_PublisherId(publisher.getPublisherId()))
+    @Test
+    void shouldFindBooksByPublisherId() {
+
+        assertThat(
+                bookRepo.findByPublisher_PublisherId(
+                        publisher.getPublisherId()
+                )
+        )
                 .extracting(Book::getBookId)
                 .contains(book.getBookId());
+    }
 
-        assertThat(bookRepo.findByPublisher_PublisherNameContainingIgnoreCase(suffix))
+    @Test
+    void shouldFindBooksByPublisherNameContainingIgnoreCase() {
+
+        assertThat(
+                bookRepo.findByPublisher_PublisherNameContainingIgnoreCase(
+                        publisher.getPublisherName()
+                )
+        )
                 .extracting(Book::getBookId)
                 .contains(book.getBookId());
+    }
 
-        assertThat(bookRepo.findByPublisher_CountryIgnoreCase(publisher.getCountry().toLowerCase()))
+    @Test
+    void shouldFindBooksByPublisherCountryIgnoreCase() {
+
+        assertThat(
+                bookRepo.findByPublisher_CountryIgnoreCase(
+                        publisher.getCountry().toLowerCase()
+                )
+        )
                 .extracting(Book::getBookId)
                 .contains(book.getBookId());
     }
