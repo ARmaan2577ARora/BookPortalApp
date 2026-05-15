@@ -1,41 +1,42 @@
 package com.example.bookPortal.entity;
 
-
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "book_authors")
 public class BookAuthor {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer bookAuthorId;
-
-    @Column(name = "author_order")
-    private Integer authorOrder;
+    @EmbeddedId
+    private BookAuthorId id = new BookAuthorId();
 
     @ManyToOne
+    @MapsId("bookId")
     @JoinColumn(name = "book_id")
     private Book book;
 
     @ManyToOne
+    @MapsId("authorId")
     @JoinColumn(name = "author_id")
     private Author author;
 
-    public Integer getBookAuthorId() {
-        return bookAuthorId;
+    @Column(name = "author_order")
+    private Integer authorOrder;
+
+    public BookAuthor() {
     }
 
-    public void setBookAuthorId(Integer bookAuthorId) {
-        this.bookAuthorId = bookAuthorId;
+    public BookAuthorId getId() {
+        return id;
     }
 
-    public Integer getAuthorOrder() {
-        return authorOrder;
-    }
-
-    public void setAuthorOrder(Integer authorOrder) {
-        this.authorOrder = authorOrder;
+    public void setId(BookAuthorId id) {
+        this.id = id;
     }
 
     public Book getBook() {
@@ -44,6 +45,14 @@ public class BookAuthor {
 
     public void setBook(Book book) {
         this.book = book;
+
+        if (this.id == null) {
+            this.id = new BookAuthorId();
+        }
+
+        if (book != null) {
+            this.id.setBookId(book.getBookId());
+        }
     }
 
     public Author getAuthor() {
@@ -52,5 +61,21 @@ public class BookAuthor {
 
     public void setAuthor(Author author) {
         this.author = author;
+
+        if (this.id == null) {
+            this.id = new BookAuthorId();
+        }
+
+        if (author != null) {
+            this.id.setAuthorId(author.getAuthorId());
+        }
+    }
+
+    public Integer getAuthorOrder() {
+        return authorOrder;
+    }
+
+    public void setAuthorOrder(Integer authorOrder) {
+        this.authorOrder = authorOrder;
     }
 }
