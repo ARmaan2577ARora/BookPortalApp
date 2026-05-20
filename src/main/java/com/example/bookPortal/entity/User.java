@@ -1,7 +1,8 @@
 package com.example.bookPortal.entity;
 
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,6 +19,7 @@ public class User {
     @Column(name = "email", length = 100)
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "password_hash", length = 255)
     private String passwordHash;
 
@@ -97,8 +99,8 @@ public class User {
         return isActive;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setIsActive(Boolean active) {
+        isActive = active;
     }
 
     public Roles getRole() {
@@ -109,4 +111,3 @@ public class User {
         this.role = role;
     }
 }
-
