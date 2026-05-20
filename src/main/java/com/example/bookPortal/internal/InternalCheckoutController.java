@@ -2,6 +2,7 @@ package com.example.bookPortal.internal;
 
 import com.example.bookPortal.entity.*;
 import com.example.bookPortal.repository.*;
+import com.example.bookPortal.service.OrderStockService;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +20,16 @@ public class InternalCheckoutController {
     private final StoreBookRepo storeBookRepo;
     private final OrderRepo orderRepo;
     private final OrderItemRepo orderItemRepo;
+    private final OrderStockService orderStockService;
 
-    public InternalCheckoutController(UserRepo userRepo, AddressRepo addressRepo, StoreBookRepo storeBookRepo, OrderRepo orderRepo, OrderItemRepo orderItemRepo) {
+    public InternalCheckoutController(UserRepo userRepo, AddressRepo addressRepo, StoreBookRepo storeBookRepo, OrderRepo orderRepo,
+                                      OrderItemRepo orderItemRepo, OrderStockService orderStockService) {
         this.userRepo = userRepo;
         this.addressRepo = addressRepo;
         this.storeBookRepo = storeBookRepo;
         this.orderRepo = orderRepo;
         this.orderItemRepo = orderItemRepo;
+        this.orderStockService = orderStockService;
     }
 
     @PostMapping("/place-order")
@@ -87,6 +91,28 @@ public class InternalCheckoutController {
             map.put("items", orderItemRepo.findByOrder_OrderId(order.getOrderId()).stream().map(BackendMapper::orderItem).toList());
             return map;
         }).toList());
+    }
+
+
+    @PostMapping("/orders/{email}/{orderId}/cancel")
+    @Transactional
+    public Map<String, Object> cancelOrder(@PathVariable String email, @PathVariable Integer orderId) {
+        User user = userRepo.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        if (order.getUser() == null || !Objects.equals(order.getUser().getUserId(), user.getUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This order does not belong to user");
+        }
+
+        orderStockService.cancelCustomerOrder(order);
+        order = orderRepo.save(order);
+
+        Map<String, Object> map = new LinkedHashMap<>(BackendMapper.order(order));
+        map.put("items", orderItemRepo.findByOrder_OrderId(order.getOrderId()).stream().map(BackendMapper::orderItem).toList());
+        return Map.of("order", map);
     }
 
     private String string(Object o) { return o == null ? "" : String.valueOf(o).trim(); }
