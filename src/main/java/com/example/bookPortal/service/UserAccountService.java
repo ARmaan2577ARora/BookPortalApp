@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 public class UserAccountService {
@@ -33,6 +34,43 @@ public class UserAccountService {
     @Transactional
     public User createAdmin(String fullName, String email, String rawPassword, String phone) {
         return createUser(fullName, email, rawPassword, phone, "ADMIN");
+    }
+
+
+    @Transactional
+    public User findOrCreateOAuth2Customer(String fullName,
+                                           String email,
+                                           String provider,
+                                           String providerId) {
+        String cleanEmail = email == null ? "" : email.trim().toLowerCase();
+        if (cleanEmail.isBlank()) {
+            throw new RuntimeException("OAuth2 email was not received");
+        }
+
+        User user = userRepo.findByEmailIgnoreCase(cleanEmail).orElse(null);
+
+        if (user == null) {
+            Roles customer = rolesRepo.findByRoleNameIgnoreCase("CUSTOMER")
+                    .orElseThrow(() -> new RuntimeException("CUSTOMER role not found"));
+
+            user = new User();
+            user.setFullName((fullName == null || fullName.isBlank()) ? cleanEmail : fullName.trim());
+            user.setEmail(cleanEmail);
+            user.setPasswordHash(passwordEncoder.encode(provider + ":" + providerId + ":" + UUID.randomUUID()));
+            user.setPhone("");
+            user.setRole(customer);
+            user.setIsActive(true);
+            user.setCreatedAt(LocalDateTime.now());
+        } else if ((user.getFullName() == null || user.getFullName().isBlank()) && fullName != null && !fullName.isBlank()) {
+            user.setFullName(fullName.trim());
+        }
+
+        user.setLastLogin(LocalDateTime.now());
+        if (user.getIsActive() == null) {
+            user.setIsActive(true);
+        }
+
+        return userRepo.save(user);
     }
 
     private User createUser(String fullName,
